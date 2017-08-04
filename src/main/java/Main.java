@@ -199,7 +199,7 @@ public class Main {
         Set<String> addTest = Tools.addToA(aTableNames, bTableNames);
         //新增的表
         for (String tableName : addTest) {
-            allSql.add(new TableCreate(mySqlA, bTableScheduleMap.get(tableName)).newTableSql() + "\n");
+            allSql.add(new TableCreate(mySqlB, bTableScheduleMap.get(tableName)).newTableSql() + "\n");
         }
         aTableNames.removeAll(removeTest);
         return aTableNames;
