@@ -42,7 +42,7 @@ public class Column {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 0;
         result = 31 * result + (Field != null ? Field.hashCode() : 0);
         result = 31 * result + (Comment != null ? Comment.hashCode() : 0);
         result = 31 * result + (Type != null ? Type.hashCode() : 0);

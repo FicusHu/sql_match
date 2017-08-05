@@ -15,11 +15,11 @@ public class Index {
     private String Comment;
     private String Null;
     private String Table;
-//    private Long Cardinality;
+    //    private Long Cardinality;
     private Long Sub_part;
-//    private Long Packed;
+    //    private Long Packed;
     private Long Non_unique;
-//    private String Collation;
+    //    private String Collation;
     private String Column_name;
     private String Index_comment;
     private Long Seq_in_index;
@@ -58,7 +58,7 @@ public class Index {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 0;
         result = 31 * result + (Comment != null ? Comment.hashCode() : 0);
         result = 31 * result + (Null != null ? Null.hashCode() : 0);
         result = 31 * result + (Table != null ? Table.hashCode() : 0);
