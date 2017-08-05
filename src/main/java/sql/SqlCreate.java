@@ -30,7 +30,11 @@ public class SqlCreate {
     }
 
     public static String getAddPrimaryKey(List<Index> bPrimaryKeys) {
-        return "ADD PRIMARY KEY " + bPrimaryKeys.stream().map(Index.indexColumn).collect(Collectors.joining(",", "(", ")"));
+        if(bPrimaryKeys ==null || bPrimaryKeys.isEmpty()) {
+            return "";
+        } else {
+            return "ADD " + getPrimaryKey(bPrimaryKeys);
+        }
     }
 
     public static String getDropPrimaryKey() {
@@ -63,12 +67,13 @@ public class SqlCreate {
         }
 
 
-        // 类似 MODIFY COLUMN `tsttt2`  varchar(255) NULL COMMENT '测试属性' AFTER `tettt`
-        String template = "COLUMN `%s` %s  %s %s %s";
+        // 类似 MODIFY COLUMN `tsttt2`  varchar(255) NULL DEFAULT '0' COMMENT '测试属性' AFTER `tettt`
+        String template = "COLUMN `%s` %s  %s %s %s %s";
         return String.format(template
                 , columnName
                 , column.getType()
                 , Tools.isNullStr(column.getNull())
+                , getDefault(column)
                 , getComment(column.getComment())
                 , position);
     }
@@ -79,7 +84,11 @@ public class SqlCreate {
     }
 
     public static String getPrimaryKey(List<Index> indexGroup) {
-        return indexGroup.stream().map(Index::getColumn_name).collect(Collectors.joining("`,`", "PRIMARY KEY (`", "`)"));
+        if(indexGroup == null || indexGroup.isEmpty()) {
+            return "";
+        } else {
+            return " PRIMARY KEY " + indexGroup.stream().map(Index::getColumn_name).collect(Collectors.joining("`,`", "(`", "`)"));
+        }
     }
 
     public static String getComment(String comment) {
@@ -99,5 +108,20 @@ public class SqlCreate {
         String suffix = ") USING " + sampleIndex.getIndex_type() + getComment(sampleIndex.getComment());
         String prefix = "ADD " + getIndexTypeSql(sampleIndex) + " `" + sampleIndex.getKey_name() + "` " + "(";
         return indexs.stream().map(Index.indexColumn).collect(Collectors.joining(",", prefix, suffix));
+    }
+
+    public static String getDefault(Column column) {
+        if (column.getDefault() != null) {
+            if ("datetime".equals(column.getType()) && "CURRENT_TIMESTAMP".equals(column.getDefault())) {
+                return " DEFAULT " + column.getDefault() + "";
+            } else {
+                return " DEFAULT '" + column.getDefault() + "'";
+            }
+        } else {
+            if ("datetime".equals(column.getType()) && "YES".equals(column.getNull())) {
+                return " DEFAULT '1970-01-01 00:00'";
+            }
+            return " ";
+        }
     }
 }

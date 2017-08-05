@@ -36,7 +36,7 @@ public class TableCreate {
         List<String> createTableComponent = new ArrayList<>();
 
         String columnAdd = column1s.stream()
-                .map(column -> "`" + column.getField() + "` " + column.getType() + Tools.isNullStr(column.getNull()) + getDefaultValue(column.getDefault()) + SqlCreate.getComment(column.getComment()))
+                .map(column -> "`" + column.getField() + "` " + column.getType() + Tools.isNullStr(column.getNull()) + SqlCreate.getDefault(column) + SqlCreate.getComment(column.getComment()))
                 .collect(Collectors.joining(",\n"));
 
 
@@ -48,7 +48,7 @@ public class TableCreate {
                 .collect(Collectors.joining(",\n"
                         , "CREATE TABLE `" + tableSchedule.getTABLE_NAME() + "` (\n"
                         , "\n) ENGINE=" + tableSchedule.getENGINE() + " DEFAULT CHARSET=" + tableSchedule.getTABLE_COLLATION().substring(0, tableSchedule.getTABLE_COLLATION().indexOf("_"))
-                                                    + " COLLATE=" + tableSchedule.getTABLE_COLLATION() + getTableComment(tableSchedule) + ";"));
+                                                    + " COLLATE=" + tableSchedule.getTABLE_COLLATION() + SqlCreate.getComment(tableSchedule.getTABLE_COMMENT()) + ";"));
 
         return sql;
     }
@@ -72,29 +72,9 @@ public class TableCreate {
     }
 
     public String getKey(List<Index> indexs) throws SQLException {
-        List<Index> indexGroup = Tools.getPrimaryKeys(indexs);
-        if (!indexGroup.isEmpty()) {
-            return SqlCreate.getPrimaryKey(indexGroup);
-        } else {
-            return "";
-        }
-    }
-
-    private static String getDefaultValue(String aDefault) {
-        if (aDefault != null) {
-            return " DEFAULT '" + aDefault + "'";
-        } else {
-            return " ";
-        }
+        List<Index> keyGroup = Tools.getPrimaryKeys(indexs);
+        return SqlCreate.getPrimaryKey(keyGroup);
     }
 
 
-    public static String getTableComment(TableSchedule tableSchedule) {
-        if (!StringUtils.isEmpty(tableSchedule.getTABLE_COMMENT())) {
-            return " COMMENT='" + tableSchedule.getTABLE_COMMENT() + "'";
-        } else {
-            return "";
-        }
-
-    }
 }
