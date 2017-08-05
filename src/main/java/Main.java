@@ -1,5 +1,4 @@
 import db.mysql.MySql;
-import db.vo.ConnMsg;
 import entity.Column;
 import entity.Index;
 import entity.TableSchedule;
@@ -10,7 +9,14 @@ import sql.TableCreate;
 import tool.Tools;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -20,17 +26,15 @@ import java.util.stream.Collectors;
  */
 public class Main {
 
-    public static final ConnMsg connMsgA = new ConnMsg("localhost", 3306, "test1", "root", "root");
-    public static final ConnMsg connMsgB = new ConnMsg("localhost", 3306, "test2", "root", "root");
     public static final MySql mySqlA;
     public static final MySql mySqlB;
 
     static {
         try {
-            mySqlA = new MySql(connMsgA);
+            mySqlA = new MySql(Config.connMsgA);
             mySqlA.connect();
 
-            mySqlB = new MySql(connMsgB);
+            mySqlB = new MySql(Config.connMsgB);
             mySqlB.connect();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -44,9 +48,12 @@ public class Main {
 
 
     public static void main(String[] args) throws SQLException {
+        List<TableSchedule> tableSchedules = SqlSelect.selectTableSchedules(mySqlA, Config.connMsgA.getDatabaseName());
+        List<TableSchedule> tableSchedules1 = SqlSelect.selectTableSchedules(mySqlB, Config.connMsgB.getDatabaseName());
+        //过滤某些表
+        tableSchedules = tableSchedules.stream().filter(Config.tableSchedulePredicate).collect(Collectors.toList());
+        tableSchedules1 = tableSchedules1.stream().filter(Config.tableSchedulePredicate).collect(Collectors.toList());
 
-        List<TableSchedule> tableSchedules = SqlSelect.selectTableSchedules(mySqlA, connMsgA.getDatabaseName());
-        List<TableSchedule> tableSchedules1 = SqlSelect.selectTableSchedules(mySqlB, connMsgB.getDatabaseName());
         Map<String, TableSchedule> tableScheduleMap = Tools.getMap(tableSchedules, TableSchedule::getTABLE_NAME);
         Map<String, TableSchedule> tableScheduleMap1 = Tools.getMap(tableSchedules1, TableSchedule::getTABLE_NAME);
         //表匹配
@@ -132,6 +139,7 @@ public class Main {
 
     /**
      * 索引匹配
+     *
      * @param aTableSchedule
      * @param bTableSchedule
      * @param deleteColumn
