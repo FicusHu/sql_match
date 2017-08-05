@@ -75,7 +75,7 @@ public class Tools {
      * 交集
      */
     public static <T> Set<T> intersection(Collection<T> aList, Collection<T> bList) {
-        Set<T> orgAList = new HashSet<>(aList);
+        Set<T> orgAList = new TreeSet<>(aList);
         orgAList.retainAll(bList);
         return orgAList;
     }
