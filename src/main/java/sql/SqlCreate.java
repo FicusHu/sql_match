@@ -4,7 +4,6 @@ import entity.Column;
 import entity.Index;
 import entity.TableSchedule;
 import org.apache.commons.lang3.StringUtils;
-import tool.Tools;
 
 import java.util.List;
 import java.util.Set;
@@ -16,6 +15,8 @@ import java.util.stream.Collectors;
  * @description 负责生成一些修改的sql
  */
 public class SqlCreate {
+
+    private static final boolean TIP_SHOW = true;
 
     public static List<String> dropIndexSql(Set<List<Index>> deleteIndex) {
         return deleteIndex.stream().map(indices -> "DROP INDEX `" + indices.get(0).getKey_name() + "`").collect(Collectors.toList());
@@ -30,7 +31,7 @@ public class SqlCreate {
     }
 
     public static String getAddPrimaryKey(List<Index> bPrimaryKeys) {
-        if(bPrimaryKeys ==null || bPrimaryKeys.isEmpty()) {
+        if (bPrimaryKeys == null || bPrimaryKeys.isEmpty()) {
             return "";
         } else {
             return "ADD " + getPrimaryKey(bPrimaryKeys);
@@ -53,26 +54,30 @@ public class SqlCreate {
         return "ADD " + getfModityOrAddColumn(columnName, column, preColumn);
     }
 
-    public static String getModifyColumn(String columnName, Column column, Column preColumn) {
+    public static String getModifyColumn(String columnName, Column column, Column preColumn, String tips) {
 
-        return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn);
+        if (TIP_SHOW == true) {
+            return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn) + " -- " + tips;
+        } else {
+            return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn);
+        }
     }
 
     private static String getfModityOrAddColumn(String columnName, Column column, Column preColumn) {
         String position;
         if (preColumn == null) {
-            position = " FIRST";
+            position = "FIRST";
         } else {
-            position = " AFTER `" + preColumn.getField() + "`";
+            position = "AFTER `" + preColumn.getField() + "`";
         }
 
 
         // 类似 MODIFY COLUMN `tsttt2`  varchar(255) NULL DEFAULT '0' COMMENT '测试属性' AFTER `tettt`
-        String template = "COLUMN `%s` %s  %s %s %s %s";
+        String template = "COLUMN `%s` %s %s %s %s %s";
         return String.format(template
                 , columnName
                 , column.getType()
-                , Tools.isNullStr(column.getNull())
+                , isNullStr(column.getNull())
                 , getDefault(column)
                 , getComment(column.getComment())
                 , position);
@@ -80,22 +85,24 @@ public class SqlCreate {
 
 
     public static String getAlterTable(TableSchedule aTableSchedule, List<String> addOrDropSqlComponent) {
-        return addOrDropSqlComponent.stream().collect(Collectors.joining(",\n", "ALTER TABLE `" + aTableSchedule.getTABLE_NAME() + "` \n", ";"));
+        return addOrDropSqlComponent.stream()
+                .map(e -> " " + e)
+                .collect(Collectors.joining(",\n", "ALTER TABLE `" + aTableSchedule.getTABLE_NAME() + "`\n", ";"));
     }
 
     public static String getPrimaryKey(List<Index> indexGroup) {
-        if(indexGroup == null || indexGroup.isEmpty()) {
+        if (indexGroup == null || indexGroup.isEmpty()) {
             return "";
         } else {
-            return " PRIMARY KEY " + indexGroup.stream().map(Index::getColumn_name).collect(Collectors.joining("`,`", "(`", "`)"));
+            return "PRIMARY KEY " + indexGroup.stream().map(Index::getColumn_name).collect(Collectors.joining("`,`", "(`", "`)"));
         }
     }
 
     public static String getComment(String comment) {
         if (!StringUtils.isEmpty(comment)) {
-            return " COMMENT '" + comment + "' ";
+            return "COMMENT '" + comment + "'";
         } else {
-            return " ";
+            return "";
         }
     }
 
@@ -105,23 +112,34 @@ public class SqlCreate {
     public static String getAddIndex(List<Index> indexs) {
         //多个index的comment和 index类型, tablename都是一样的
         Index sampleIndex = indexs.get(0);
-        String suffix = ") USING " + sampleIndex.getIndex_type() + getComment(sampleIndex.getComment());
+        String suffix = ") USING " + sampleIndex.getIndex_type() + " " + getComment(sampleIndex.getComment());
         String prefix = "ADD " + getIndexTypeSql(sampleIndex) + " `" + sampleIndex.getKey_name() + "` " + "(";
         return indexs.stream().map(Index.indexColumn).collect(Collectors.joining(",", prefix, suffix));
     }
 
     public static String getDefault(Column column) {
         if (column.getDefault() != null) {
-            if ("datetime".equals(column.getType()) && "CURRENT_TIMESTAMP".equals(column.getDefault())) {
-                return " DEFAULT " + column.getDefault() + "";
+            if ("datetime".equalsIgnoreCase(column.getType()) && "CURRENT_TIMESTAMP".equalsIgnoreCase(column.getDefault())) {
+                return "DEFAULT " + column.getDefault() + "";
             } else {
-                return " DEFAULT '" + column.getDefault() + "'";
+                return "DEFAULT '" + column.getDefault() + "'";
             }
         } else {
-            if ("datetime".equals(column.getType()) && "YES".equals(column.getNull())) {
-                return " DEFAULT '1970-01-01 00:00'";
+            if ("datetime".equalsIgnoreCase(column.getType()) && "NOT".equalsIgnoreCase(column.getNull())) {
+                return "DEFAULT '1970-01-01 00:00'";
             }
-            return " ";
+            return "";
         }
+    }
+
+    public static String isNullStr(String isNull) {
+        if ("YES".equalsIgnoreCase(isNull)) {
+            return "NULL";
+        }
+        if ("NO".equalsIgnoreCase(isNull)) {
+            return "NOT NULL";
+        }
+
+        throw new RuntimeException("不知道是什么类型的null");
     }
 }

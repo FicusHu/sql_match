@@ -5,6 +5,9 @@ package entity; /**
  */
 
 import lombok.Data;
+import sql.SqlCreate;
+
+import java.util.Objects;
 
 /**
  * Copyright 2017 bejson.com
@@ -16,12 +19,28 @@ public class Column {
     private String Comment;
     private String Type;
     private String Null;
-    private String Extra;
-    private String Privileges;
-    private String Collation;
+    //    private String Extra;
+//    private String Privileges;
+//    private String Collation;
     private String Default;
-    private String Key;
+//    private String Key;
 
+    public static String compareTip(Column aColumn, Column bColumn) {
+        String tips = "";
+        if (!Objects.equals(aColumn.getType(), bColumn.getType())) {
+            tips = tips + String.format("类型type 不一致, %s : %s; ", aColumn.getType(), bColumn.getType());
+        }
+        if (!Objects.equals(aColumn.getNull(), bColumn.getNull())) {
+            tips = tips + String.format(" null 一致, %s : %s; ", SqlCreate.isNullStr(aColumn.getNull()), SqlCreate.isNullStr(bColumn.getNull()));
+        }
+        if (!Objects.equals(aColumn.getComment(), bColumn.getComment())) {
+            tips = tips + String.format("comment 不一致, %s : %s; ", aColumn.getComment(), bColumn.getComment());
+        }
+        if (!Objects.equals(aColumn.getDefault(), bColumn.getDefault())) {
+            tips = tips + String.format("默认值 不一致, %s : %s; ", aColumn.getDefault(), bColumn.getDefault());
+        }
+        return tips;
+    }
 
     @Override
     public boolean equals(Object o) {

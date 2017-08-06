@@ -35,45 +35,41 @@ public class TableCreate {
 
         List<String> createTableComponent = new ArrayList<>();
 
-        String columnAdd = column1s.stream()
-                .map(column -> "`" + column.getField() + "` " + column.getType() + Tools.isNullStr(column.getNull()) + SqlCreate.getDefault(column) + SqlCreate.getComment(column.getComment()))
-                .collect(Collectors.joining(",\n"));
+        createTableComponent.addAll(column1s.stream()
+                                            .map(column -> "`" + column.getField() + "` " + column.getType() + " " + sql.SqlCreate.isNullStr(column.getNull()) + " " + sql.SqlCreate.getDefault(column) + " " + sql.SqlCreate.getComment(column.getComment()))
+                                            .collect(Collectors.toList()));
 
-
-        createTableComponent.add(columnAdd);
         createTableComponent.add(getKey(indexs));
-        createTableComponent.add(getIndexWithoutKey(indexs));
-
-        String sql = createTableComponent.stream().filter(s -> !StringUtils.isEmpty(s))
+        createTableComponent.addAll(getIndexWithoutKey(indexs));
+        return createTableComponent.stream().filter(s -> !StringUtils.isEmpty(s))
+                .map(e -> "  " + e)
                 .collect(Collectors.joining(",\n"
                         , "CREATE TABLE `" + tableSchedule.getTABLE_NAME() + "` (\n"
                         , "\n) ENGINE=" + tableSchedule.getENGINE() + " DEFAULT CHARSET=" + tableSchedule.getTABLE_COLLATION().substring(0, tableSchedule.getTABLE_COLLATION().indexOf("_"))
-                                                    + " COLLATE=" + tableSchedule.getTABLE_COLLATION() + SqlCreate.getComment(tableSchedule.getTABLE_COMMENT()) + ";"));
+                                                    + " COLLATE=" + tableSchedule.getTABLE_COLLATION() + " " + sql.SqlCreate.getComment(tableSchedule.getTABLE_COMMENT()) + ";"));
 
-        return sql;
     }
 
 
-    public String getIndexWithoutKey(List<Index> indexs) {
+    public List<String> getIndexWithoutKey(List<Index> indexs) {
         Map<String, List<Index>> indexGroup = indexs.stream().filter(Tools.IS_PRIMARY_PREDICATE.negate()).collect(Collectors.groupingBy(Index::getKey_name, Collectors.toList()));
         Comparator<Index> comparingIndex = Comparator.comparing(Index::getSeq_in_index);
         for (List<Index> indices : indexGroup.values()) {
             indices.sort(comparingIndex);
         }
-        String collect = indexGroup.keySet().stream().map(key -> {
+        return indexGroup.keySet().stream().map(key -> {
             List<Index> indices = indexGroup.get(key);
             String union = "";
             if (indices.get(0).getNon_unique().equals(0L)) {
-                union = "UNIQUE";
+                union = "UNIQUE ";
             }
-            return union + " KEY `" + key + "` " + indices.stream().map(Index.indexColumn).collect(Collectors.joining(",", "(", ")")) + " USING " + indices.get(0).getIndex_type();
-        }).collect(Collectors.joining(",\n"));
-        return collect;
+            return union + "KEY `" + key + "` " + indices.stream().map(Index.indexColumn).collect(Collectors.joining(",", "(", ")")) + " USING " + indices.get(0).getIndex_type();
+        }).collect(Collectors.toList());
     }
 
     public String getKey(List<Index> indexs) throws SQLException {
         List<Index> keyGroup = Tools.getPrimaryKeys(indexs);
-        return SqlCreate.getPrimaryKey(keyGroup);
+        return sql.SqlCreate.getPrimaryKey(keyGroup);
     }
 
 

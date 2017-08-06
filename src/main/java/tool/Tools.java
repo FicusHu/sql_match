@@ -21,17 +21,6 @@ public class Tools {
 
     public static final Predicate<Index> IS_PRIMARY_PREDICATE = index -> "PRIMARY".equals(index.getKey_name());
 
-    public static String isNullStr(String isNull) {
-        if ("YES".equals(isNull)) {
-            return " NULL";
-        }
-        if ("NO".equals(isNull)) {
-            return " NOT NULL";
-        }
-
-        throw new RuntimeException("不知道是什么类型的null");
-    }
-
 
     /**
      * 获取数据库表的索引
