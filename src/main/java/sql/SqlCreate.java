@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public class SqlCreate {
 
-    private static final boolean TIP_SHOW = true;
+    private static final boolean TIP_SHOW = false;
 
     public static List<String> dropIndexSql(Set<List<Index>> deleteIndex) {
         return deleteIndex.stream().map(indices -> "DROP INDEX `" + indices.get(0).getKey_name() + "`").collect(Collectors.toList());
