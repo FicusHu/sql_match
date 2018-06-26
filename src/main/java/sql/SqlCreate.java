@@ -119,7 +119,7 @@ public class SqlCreate {
 
     public static String getDefault(Column column) {
         if (column.getDefault() != null) {
-            if ("datetime".equalsIgnoreCase(column.getType()) && "CURRENT_TIMESTAMP".equalsIgnoreCase(column.getDefault())) {
+            if ("CURRENT_TIMESTAMP".equalsIgnoreCase(column.getDefault())) {
                 return "DEFAULT " + column.getDefault() + "";
             } else {
                 return "DEFAULT '" + column.getDefault() + "'";

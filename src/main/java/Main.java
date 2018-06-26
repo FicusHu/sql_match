@@ -28,12 +28,16 @@ public class Main {
 
     public static final MySql mySqlA;
     public static final MySql mySqlB;
+    public static final boolean TIP_SHOW = true;
 
     static {
         try {
             mySqlA = new MySql(Config.connMsgA);
             mySqlA.connect();
-
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        try {
             mySqlB = new MySql(Config.connMsgB);
             mySqlB.connect();
         } catch (SQLException e) {
@@ -110,6 +114,7 @@ public class Main {
 
         for (String columnName : addTest) {
             Column column = bColumnMap.get(columnName);
+
             if (bColumns.indexOf(column) == 0) {
                 addOrDropSqlComponent.add(SqlCreate.getAddColumn(columnName, column, null));
             } else {
@@ -123,9 +128,9 @@ public class Main {
             Column bcolumn = bColumnMap.get(columnName);
             if (!bcolumn.equals(aColumnMap.get(columnName))) {
                 if (bColumns.indexOf(bcolumn) == 0) {
-                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, null));
+                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, null, Column.compareTip(aColumnMap.get(columnName), bcolumn)));
                 } else {
-                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, bColumns.get(bColumns.indexOf(bcolumn) - 1)));
+                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, bColumns.get(bColumns.indexOf(bcolumn) - 1), Column.compareTip(aColumnMap.get(columnName), bcolumn)));
                 }
             }
         }

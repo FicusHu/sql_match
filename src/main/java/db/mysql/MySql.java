@@ -42,7 +42,7 @@ public class MySql implements DataBase {
                                                    + "?user=" + connMsg.getUsername()
                                                    + "&password=" + connMsg.getPassword()
                                                    + "&useUnicode=true&characterEncoding=UTF8&serverTimezone=UTC&useSSL=true");
-        return null;
+        return conn;
     }
 
     @Override

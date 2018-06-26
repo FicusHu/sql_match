@@ -52,7 +52,9 @@ public class Column {
         if (Field != null ? !Field.equals(column.Field) : column.Field != null) return false;
         if (Comment != null ? !Comment.equals(column.Comment) : column.Comment != null) return false;
         if (Type != null ? !Type.equals(column.Type) : column.Type != null) return false;
-        if (Null != null ? !Null.equals(column.Null) : column.Null != null) return false;
+        if(!"datetime".equals(Type)) {
+            if (Null != null ? !Null.equals(column.Null) : column.Null != null) return false;
+        }
 //        if (Extra != null ? !Extra.equals(column.Extra) : column.Extra != null) return false;
 //        if (Privileges != null ? !Privileges.equals(column.Privileges) : column.Privileges != null) return false;
 //        if (Collation != null ? !Collation.equals(column.Collation) : column.Collation != null) return false;
