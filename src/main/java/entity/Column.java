@@ -19,11 +19,11 @@ public class Column {
     private String Comment;
     private String Type;
     private String Null;
-    //    private String Extra;
-//    private String Privileges;
-//    private String Collation;
+    private String Extra;
+    private String Privileges;
+    private String Collation;
     private String Default;
-//    private String Key;
+    private String Key;
 
     public static String compareTip(Column aColumn, Column bColumn) {
         String tips = "";
@@ -55,7 +55,7 @@ public class Column {
         if(!"datetime".equals(Type)) {
             if (Null != null ? !Null.equals(column.Null) : column.Null != null) return false;
         }
-//        if (Extra != null ? !Extra.equals(column.Extra) : column.Extra != null) return false;
+        if (Extra != null ? !Extra.equals(column.Extra) : column.Extra != null) return false;
 //        if (Privileges != null ? !Privileges.equals(column.Privileges) : column.Privileges != null) return false;
 //        if (Collation != null ? !Collation.equals(column.Collation) : column.Collation != null) return false;
         return Default != null ? Default.equals(column.Default) : column.Default == null;
