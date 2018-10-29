@@ -1,3 +1,5 @@
+package boot;
+
 import db.mysql.MySql;
 import entity.Column;
 import entity.Index;

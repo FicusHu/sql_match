@@ -4,6 +4,7 @@ package entity; /**
  * @description
  */
 
+import boot.Config;
 import lombok.Data;
 import sql.SqlCreate;
 
@@ -50,9 +51,11 @@ public class Column {
         Column column = (Column) o;
 
         if (Field != null ? !Field.equals(column.Field) : column.Field != null) return false;
-        if (Comment != null ? !Comment.equals(column.Comment) : column.Comment != null) return false;
+        if (Config.comparedComment) {
+            if (Comment != null ? !Comment.equals(column.Comment) : column.Comment != null) return false;
+        }
         if (Type != null ? !Type.equals(column.Type) : column.Type != null) return false;
-        if(!"datetime".equals(Type)) {
+        if (!"datetime".equals(Type)) {
             if (Null != null ? !Null.equals(column.Null) : column.Null != null) return false;
         }
         if (Extra != null ? !Extra.equals(column.Extra) : column.Extra != null) return false;

@@ -1,3 +1,5 @@
+package boot;
+
 import db.vo.ConnMsg;
 import entity.TableSchedule;
 
@@ -9,7 +11,8 @@ import java.util.function.Predicate;
  * @description
  */
 public class Config {
-
+    //是否匹配注释
+    public static final boolean comparedComment = false;
 
     public static final ConnMsg connMsgB = new ConnMsg("localhost", 3306, "test1", "root", "root");
     public static final ConnMsg connMsgA = new ConnMsg("localhost", 3306, "test2", "root", "root");
