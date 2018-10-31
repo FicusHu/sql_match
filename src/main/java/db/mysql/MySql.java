@@ -2,7 +2,7 @@ package db.mysql;
 
 
 import db.DataBase;
-import db.vo.ConnMsg;
+import property.ConnMsg;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -25,20 +25,17 @@ public class MySql implements DataBase {
         }
     }
 
-    ConnMsg connMsg;
     private Connection conn;
+    private ConnMsg connMsg;
 
-    public MySql(String dbName) throws SQLException {
-        this.connMsg = new MySqlDefault(dbName);
-    }
-
-    public MySql(ConnMsg connMsg) throws SQLException {
+    public MySql(ConnMsg connMsg) {
         this.connMsg = connMsg;
     }
 
+
     public Connection connect() throws SQLException {
-        conn = DriverManager.getConnection("jdbc:mysql://" + connMsg.getUrl() + ":" + connMsg.getPort() + "/"
-                                                   + connMsg.getDatabaseName()
+        conn = DriverManager.getConnection("jdbc:mysql://" + connMsg.getHost() + ":" + connMsg.getPort() + "/"
+                                                   + connMsg.getDatabase()
                                                    + "?user=" + connMsg.getUsername()
                                                    + "&password=" + connMsg.getPassword()
                                                    + "&useUnicode=true&characterEncoding=UTF8&serverTimezone=UTC&useSSL=true");

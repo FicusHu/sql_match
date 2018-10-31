@@ -4,7 +4,6 @@ package entity; /**
  * @description
  */
 
-import boot.Config;
 import lombok.Data;
 import sql.SqlCreate;
 
@@ -43,15 +42,12 @@ public class Column {
         return tips;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Column column = (Column) o;
+    public boolean compared(Column column, boolean isCommentCompared) {
+        if (this == column) return true;
+        if (column == null || getClass() != column.getClass()) return false;
 
         if (Field != null ? !Field.equals(column.Field) : column.Field != null) return false;
-        if (Config.comparedComment) {
+        if (isCommentCompared) {
             if (Comment != null ? !Comment.equals(column.Comment) : column.Comment != null) return false;
         }
         if (Type != null ? !Type.equals(column.Type) : column.Type != null) return false;
@@ -62,19 +58,5 @@ public class Column {
 //        if (Privileges != null ? !Privileges.equals(column.Privileges) : column.Privileges != null) return false;
 //        if (Collation != null ? !Collation.equals(column.Collation) : column.Collation != null) return false;
         return Default != null ? Default.equals(column.Default) : column.Default == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = 0;
-        result = 31 * result + (Field != null ? Field.hashCode() : 0);
-        result = 31 * result + (Comment != null ? Comment.hashCode() : 0);
-        result = 31 * result + (Type != null ? Type.hashCode() : 0);
-        result = 31 * result + (Null != null ? Null.hashCode() : 0);
-//        result = 31 * result + (Extra != null ? Extra.hashCode() : 0);
-//        result = 31 * result + (Privileges != null ? Privileges.hashCode() : 0);
-//        result = 31 * result + (Collation != null ? Collation.hashCode() : 0);
-        result = 31 * result + (Default != null ? Default.hashCode() : 0);
-        return result;
     }
 }

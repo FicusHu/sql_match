@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
  */
 public class SqlCreate {
 
-    private static final boolean TIP_SHOW = false;
-
     public static List<ModifySql> dropIndexSql(Set<List<Index>> deleteIndex) {
         return deleteIndex.stream().map(indices -> new ModifySql("DROP INDEX `" + indices.get(0).getKey_name() + "`")).collect(Collectors.toList());
 
@@ -81,11 +79,15 @@ public class SqlCreate {
     }
 
 
-    public static String getAlterTable(TableSchedule aTableSchedule, List<ModifySql> addOrDropSqlComponents) {
+    public static String getAlterTable(TableSchedule aTableSchedule, List<ModifySql> addOrDropSqlComponents, boolean tipsShow) {
         String sql = "ALTER TABLE `" + aTableSchedule.getTABLE_NAME() + "`\n";
         for (int i = 0; i < addOrDropSqlComponents.size() - 1; i++) {
             ModifySql modifySql = addOrDropSqlComponents.get(i);
-            sql += modifySql.getSql() + ", " + StringUtils.defaultIfEmpty(modifySql.getTip(),"") + "\n";
+            if (tipsShow) {
+                sql += modifySql.getSql() + ", " + StringUtils.defaultIfEmpty(modifySql.getTip(), "") + "\n";
+            } else {
+                sql += modifySql.getSql() + ", " + "\n";
+            }
         }
 
         ModifySql lastModifySql = addOrDropSqlComponents.get(addOrDropSqlComponents.size() - 1);

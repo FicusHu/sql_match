@@ -1,7 +1,7 @@
 package db.mysql;
 
 
-import db.vo.ConnMsg;
+import property.ConnMsg;
 
 /**
  * @author linxixin@cvte.com
