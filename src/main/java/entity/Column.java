@@ -29,16 +29,16 @@ public class Column {
     public static String compareTip(Column aColumn, Column bColumn) {
         String tips = "";
         if (!Objects.equals(aColumn.getType(), bColumn.getType())) {
-            tips = tips + String.format("类型type 不一致, %s : %s; ", aColumn.getType(), bColumn.getType());
+            tips = tips + String.format("#类型type 不一致, 原 %s : 现 %s; ", aColumn.getType(), bColumn.getType());
         }
         if (!Objects.equals(aColumn.getNull(), bColumn.getNull())) {
-            tips = tips + String.format(" null 一致, %s : %s; ", SqlCreate.isNullStr(aColumn.getNull()), SqlCreate.isNullStr(bColumn.getNull()));
+            tips = tips + String.format("#是否可空 不一致, 原 %s : 现 %s; ", SqlCreate.isNullStr(aColumn.getNull()), SqlCreate.isNullStr(bColumn.getNull()));
         }
         if (!Objects.equals(aColumn.getComment(), bColumn.getComment())) {
-            tips = tips + String.format("comment 不一致, %s : %s; ", aColumn.getComment(), bColumn.getComment());
+            tips = tips + String.format("#注释 不一致, 原 %s : 现 %s; ", aColumn.getComment(), bColumn.getComment());
         }
         if (!Objects.equals(aColumn.getDefault(), bColumn.getDefault())) {
-            tips = tips + String.format("默认值 不一致, %s : %s; ", aColumn.getDefault(), bColumn.getDefault());
+            tips = tips + String.format("#默认值 不一致, 原 %s : 现 %s; ", aColumn.getDefault(), bColumn.getDefault());
         }
         return tips;
     }

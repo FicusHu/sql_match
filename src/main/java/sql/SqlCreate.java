@@ -1,5 +1,6 @@
 package sql;
 
+import db.vo.ModifySql;
 import entity.Column;
 import entity.Index;
 import entity.TableSchedule;
@@ -18,8 +19,9 @@ public class SqlCreate {
 
     private static final boolean TIP_SHOW = false;
 
-    public static List<String> dropIndexSql(Set<List<Index>> deleteIndex) {
-        return deleteIndex.stream().map(indices -> "DROP INDEX `" + indices.get(0).getKey_name() + "`").collect(Collectors.toList());
+    public static List<ModifySql> dropIndexSql(Set<List<Index>> deleteIndex) {
+        return deleteIndex.stream().map(indices -> new ModifySql("DROP INDEX `" + indices.get(0).getKey_name() + "`")).collect(Collectors.toList());
+
     }
 
     public static String getIndexTypeSql(Index sampleIndex) {
@@ -54,13 +56,8 @@ public class SqlCreate {
         return "ADD " + getfModityOrAddColumn(columnName, column, preColumn);
     }
 
-    public static String getModifyColumn(String columnName, Column column, Column preColumn, String tips) {
-
-        if (TIP_SHOW == true) {
-            return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn) + " -- " + tips;
-        } else {
-            return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn);
-        }
+    public static String getModifyColumn(String columnName, Column column, Column preColumn) {
+        return "MODIFY " + getfModityOrAddColumn(columnName, column, preColumn);
     }
 
     private static String getfModityOrAddColumn(String columnName, Column column, Column preColumn) {
@@ -84,10 +81,16 @@ public class SqlCreate {
     }
 
 
-    public static String getAlterTable(TableSchedule aTableSchedule, List<String> addOrDropSqlComponent) {
-        return addOrDropSqlComponent.stream()
-                .map(e -> " " + e)
-                .collect(Collectors.joining(",\n", "ALTER TABLE `" + aTableSchedule.getTABLE_NAME() + "`\n", ";"));
+    public static String getAlterTable(TableSchedule aTableSchedule, List<ModifySql> addOrDropSqlComponents) {
+        String sql = "ALTER TABLE `" + aTableSchedule.getTABLE_NAME() + "`\n";
+        for (int i = 0; i < addOrDropSqlComponents.size() - 1; i++) {
+            ModifySql modifySql = addOrDropSqlComponents.get(i);
+            sql += modifySql.getSql() + ", " + StringUtils.defaultIfEmpty(modifySql.getTip(),"") + "\n";
+        }
+
+        ModifySql lastModifySql = addOrDropSqlComponents.get(addOrDropSqlComponents.size() - 1);
+        sql += lastModifySql.getSql() + "; " + lastModifySql.getTip();
+        return sql;
     }
 
     public static String getPrimaryKey(List<Index> indexGroup) {
@@ -109,12 +112,13 @@ public class SqlCreate {
     /**
      * ADD `idx_school_uid` (`school_uid`) USING BTREE
      */
-    public static String getAddIndex(List<Index> indexs) {
+    public static ModifySql getAddIndex(List<Index> indexs) {
         //多个index的comment和 index类型, tablename都是一样的
         Index sampleIndex = indexs.get(0);
         String suffix = ") USING " + sampleIndex.getIndex_type() + " " + getComment(sampleIndex.getComment());
         String prefix = "ADD " + getIndexTypeSql(sampleIndex) + " `" + sampleIndex.getKey_name() + "` " + "(";
-        return indexs.stream().map(Index.indexColumn).collect(Collectors.joining(",", prefix, suffix));
+        return new ModifySql(indexs.stream().map(Index.indexColumn).collect(Collectors.joining(",", prefix, suffix)));
+
     }
 
     public static String getDefault(Column column) {

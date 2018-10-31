@@ -1,10 +1,10 @@
 package boot;
 
 import db.mysql.MySql;
+import db.vo.ModifySql;
 import entity.Column;
 import entity.Index;
 import entity.TableSchedule;
-import org.apache.commons.lang3.StringUtils;
 import sql.SqlCreate;
 import sql.SqlSelect;
 import sql.TableCreate;
@@ -30,7 +30,6 @@ public class Main {
 
     public static final MySql mySqlA;
     public static final MySql mySqlB;
-    public static final boolean TIP_SHOW = true;
 
     static {
         try {
@@ -47,13 +46,12 @@ public class Main {
         }
     }
 
-    /**
-     * 用于保存输出所有生成的sql
-     */
-    public static List<String> allSql = new ArrayList<>();
-
-
     public static void main(String[] args) throws SQLException {
+        /*
+          用于保存输出所有生成的sql
+         */
+        List<String> allModifySql = new ArrayList<>();
+
         List<TableSchedule> tableSchedules = SqlSelect.selectTableSchedules(mySqlA, Config.connMsgA.getDatabaseName());
         List<TableSchedule> tableSchedules1 = SqlSelect.selectTableSchedules(mySqlB, Config.connMsgB.getDatabaseName());
         //过滤某些表
@@ -63,34 +61,25 @@ public class Main {
         Map<String, TableSchedule> tableScheduleMap = Tools.getMap(tableSchedules, TableSchedule::getTABLE_NAME);
         Map<String, TableSchedule> tableScheduleMap1 = Tools.getMap(tableSchedules1, TableSchedule::getTABLE_NAME);
         //表匹配
-        Set<String> intersectionTable = matchTables(tableSchedules, tableSchedules1);
+        Set<String> intersectionTable = matchTables(tableSchedules, tableSchedules1, allModifySql);
+
 
         for (String tableName : intersectionTable) {
             TableSchedule aTableSchedule = tableScheduleMap.get(tableName);
             TableSchedule bTableSchedule = tableScheduleMap1.get(tableName);
-            //字段匹配
-            Set<String> removeColumnName = matchColumn(aTableSchedule, bTableSchedule);
-            //索引匹配
-            String matchSql = matchIndex(aTableSchedule, bTableSchedule, removeColumnName);
-            if (!StringUtils.isEmpty(matchSql)) {
-                allSql.add(matchSql);
-            }
+            matchColumnAndIndex(aTableSchedule, bTableSchedule, allModifySql);
         }
 
-        for (String sql : allSql) {
+        System.out.println();
+        for (String sql : allModifySql) {
             System.out.println(sql);
-            System.out.println("");
+            System.out.println();
         }
 
     }
 
-
-    /**
-     * 字段匹配
-     * ALTER TABLE `qrtz_locks`
-     * ADD COLUMN `sdfgsdfg`  varchar(255) NULL AFTER `tsttt2`
-     */
-    private static Set<String> matchColumn(TableSchedule aTableSchedule, TableSchedule bTableSchedule) throws SQLException {
+    private static void matchColumnAndIndex(TableSchedule aTableSchedule, TableSchedule bTableSchedule, List<String> allModifySql) throws SQLException {
+        //字段匹配
         List<Column> aColumns = SqlSelect.selectColumns(mySqlA, aTableSchedule);
         List<Column> bColumns = SqlSelect.selectColumns(mySqlB, bTableSchedule);
 
@@ -100,13 +89,13 @@ public class Main {
         List<String> aColumnNames = aColumns.stream().map(Column::getField).collect(Collectors.toList());
         List<String> bColumnNames = bColumns.stream().map(Column::getField).collect(Collectors.toList());
 
-        List<String> addOrDropSqlComponent = new ArrayList<>();
+        List<ModifySql> addOrDropSqlComponent = new ArrayList<>();
         //删除字段
         Set<String> removeTest = new HashSet<>(aColumnNames);
         removeTest.removeAll(bColumnNames);
 
         for (String columnName : removeTest) {
-            addOrDropSqlComponent.add(SqlCreate.getDropColumn(columnName));
+            addOrDropSqlComponent.add(new ModifySql(SqlCreate.getDropColumn(columnName)));
         }
 
         //添加字段
@@ -118,9 +107,9 @@ public class Main {
             Column column = bColumnMap.get(columnName);
 
             if (bColumns.indexOf(column) == 0) {
-                addOrDropSqlComponent.add(SqlCreate.getAddColumn(columnName, column, null));
+                addOrDropSqlComponent.add(new ModifySql(SqlCreate.getAddColumn(columnName, column, null)));
             } else {
-                addOrDropSqlComponent.add(SqlCreate.getAddColumn(columnName, column, bColumns.get(bColumns.indexOf(column) - 1)));
+                addOrDropSqlComponent.add(new ModifySql(SqlCreate.getAddColumn(columnName, column, bColumns.get(bColumns.indexOf(column) - 1))));
             }
         }
 
@@ -130,17 +119,21 @@ public class Main {
             Column bcolumn = bColumnMap.get(columnName);
             if (!bcolumn.equals(aColumnMap.get(columnName))) {
                 if (bColumns.indexOf(bcolumn) == 0) {
-                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, null, Column.compareTip(aColumnMap.get(columnName), bcolumn)));
+                    addOrDropSqlComponent.add(new ModifySql(SqlCreate.getModifyColumn(columnName, bcolumn, null), Column.compareTip(aColumnMap.get(columnName), bcolumn)));
                 } else {
-                    addOrDropSqlComponent.add(SqlCreate.getModifyColumn(columnName, bcolumn, bColumns.get(bColumns.indexOf(bcolumn) - 1), Column.compareTip(aColumnMap.get(columnName), bcolumn)));
+                    addOrDropSqlComponent.add(new ModifySql(SqlCreate.getModifyColumn(columnName, bcolumn, bColumns.get(bColumns.indexOf(bcolumn) - 1)), Column.compareTip(aColumnMap.get(columnName), bcolumn)));
                 }
             }
         }
 
+        //索引匹配
+        List<ModifySql> matchSql = matchIndex(aTableSchedule, bTableSchedule, removeTest);
+
+        addOrDropSqlComponent.addAll(matchSql);
+
         if (!addOrDropSqlComponent.isEmpty()) {
-            allSql.add(SqlCreate.getAlterTable(aTableSchedule, addOrDropSqlComponent));
+            allModifySql.add(SqlCreate.getAlterTable(aTableSchedule, addOrDropSqlComponent));
         }
-        return removeTest;
     }
 
 
@@ -153,8 +146,8 @@ public class Main {
      * @return
      * @throws SQLException
      */
-    public static String matchIndex(TableSchedule aTableSchedule, TableSchedule bTableSchedule, Set<String> deleteColumn) throws SQLException {
-        List<String> sqlComponent = new ArrayList<>();
+    public static List<ModifySql> matchIndex(TableSchedule aTableSchedule, TableSchedule bTableSchedule, Set<String> deleteColumn) throws SQLException {
+        List<ModifySql> sqlComponent = new ArrayList<>();
 
         sqlComponent.addAll(matchKeySqlComponent(aTableSchedule, bTableSchedule));
 
@@ -168,21 +161,21 @@ public class Main {
 
         //删除索引
         Set<List<Index>> deleteIndex = Tools.removeFrom_A(aIndexGroup.values(), bIndexGroup.values());
-        List<String> dropCollection = SqlCreate.dropIndexSql(deleteIndex);
+        List<ModifySql> dropCollection = SqlCreate.dropIndexSql(deleteIndex);
         sqlComponent.addAll(dropCollection);
 
         //新增索引
         Set<List<Index>> addIndexs = Tools.addToA(aIndexGroup.values(), bIndexGroup.values());
-        List<String> addCollect = addIndexs.stream().map(SqlCreate::getAddIndex).collect(Collectors.toList());
+        List<ModifySql> addCollect = addIndexs.stream().map(SqlCreate::getAddIndex).collect(Collectors.toList());
         sqlComponent.addAll(addCollect);
 
-        return !sqlComponent.isEmpty() ? SqlCreate.getAlterTable(aTableSchedule, sqlComponent) : "";
+        return sqlComponent;
     }
 
     /**
      * 主键匹配
      */
-    public static List<String> matchKeySqlComponent(TableSchedule aTableSchedule, TableSchedule bTableSchedule) throws SQLException {
+    public static List<ModifySql> matchKeySqlComponent(TableSchedule aTableSchedule, TableSchedule bTableSchedule) throws SQLException {
         List<Index> aPrimaryKeys = Tools.getPrimaryKeys(mySqlA, aTableSchedule);
         List<Index> bPrimaryKeys = Tools.getPrimaryKeys(mySqlB, bTableSchedule);
 
@@ -190,9 +183,10 @@ public class Main {
             return Collections.emptyList();
         } else {
             //主键需要进行修改, 先删后加
-            List<String> components = new ArrayList<>();
-            components.add(SqlCreate.getDropPrimaryKey());
-            components.add(SqlCreate.getAddPrimaryKey(bPrimaryKeys));
+            List<ModifySql> components = new ArrayList<>();
+            components.add(new ModifySql(SqlCreate.getDropPrimaryKey()));
+            components.add(new ModifySql(SqlCreate.getAddPrimaryKey(bPrimaryKeys)));
+
             return components;
         }
     }
@@ -200,7 +194,7 @@ public class Main {
     /**
      * 表匹配
      */
-    public static Set<String> matchTables(List<TableSchedule> aTableSchedules, List<TableSchedule> bTableSchedules) throws SQLException {
+    public static Set<String> matchTables(List<TableSchedule> aTableSchedules, List<TableSchedule> bTableSchedules, List<String> allModifySql) throws SQLException {
         Set<String> aTableNames = aTableSchedules.stream().map(TableSchedule::getTABLE_NAME).collect(Collectors.toSet());
         Set<String> bTableNames = bTableSchedules.stream().map(TableSchedule::getTABLE_NAME).collect(Collectors.toSet());
         Map<String, TableSchedule> bTableScheduleMap = Tools.getMap(bTableSchedules, TableSchedule::getTABLE_NAME);
@@ -209,12 +203,12 @@ public class Main {
         Set<String> removeTest = Tools.removeFrom_A(aTableNames, bTableNames);
         //删除的表
         for (String tableName : removeTest) {
-            allSql.add(SqlCreate.getDropTable(tableName));
+            allModifySql.add(SqlCreate.getDropTable(tableName));
         }
         Set<String> addTest = Tools.addToA(aTableNames, bTableNames);
         //新增的表
         for (String tableName : addTest) {
-            allSql.add(new TableCreate(mySqlB, bTableScheduleMap.get(tableName)).newTableSql() + "\n");
+            allModifySql.add(new TableCreate(mySqlB, bTableScheduleMap.get(tableName)).newTableSql() + "\n");
         }
         aTableNames.removeAll(removeTest);
         return aTableNames;
