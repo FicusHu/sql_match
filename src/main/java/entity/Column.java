@@ -46,6 +46,9 @@ public class Column {
         if (!Objects.equals(aColumn.getExtra(), bColumn.getExtra())) {
             tips = tips + String.format("Extra 不一致, 原 %s : 现 %s; ", aColumn.getExtra(), bColumn.getExtra());
         }
+//        if (!Objects.equals(aColumn.getCollation(), bColumn.getCollation())) {
+//            tips = tips + String.format("编码 不一致, 原 %s : 现 %s; ", aColumn.getCollation(), bColumn.getCollation());
+//        }
         return tips;
     }
 

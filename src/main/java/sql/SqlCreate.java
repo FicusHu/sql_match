@@ -73,6 +73,7 @@ public class SqlCreate {
                 , column.getType()
                 , isNullStr(column.getNull())
                 , SqlCreate.getExtra(column.getExtra())
+                , SqlCreate.getExtra(column.getExtra())
                 , getDefault(column)
                 , getComment(column.getComment())
                 , position).filter(StringUtils::isNotEmpty)
@@ -139,13 +140,23 @@ public class SqlCreate {
         }
     }
 
+    /**
+     * 字节编码后续再支持
+     *
+     * @param collation
+     * @return
+     */
+    public static String getCollation(String collation) {
+        return "CHARACTER SET " + collation;
+    }
+
     public static String getExtra(String extra) {
         if (extra.toLowerCase().equals("auto_increment")) {
             return "AUTO_INCREMENT";
         } else if (extra.toLowerCase().equals("on update CURRENT_TIMESTAMP".toLowerCase())) {
             return "ON UPDATE CURRENT_TIMESTAMP";
         } else if (StringUtils.isNotBlank(extra)) {
-            System.err.println("暂不支持的extra类型 " + extra);
+            return extra.toUpperCase();
         }
         return "";
     }
