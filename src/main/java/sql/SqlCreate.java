@@ -144,7 +144,7 @@ public class SqlCreate {
             return "AUTO_INCREMENT";
         } else if (extra.toLowerCase().equals("on update CURRENT_TIMESTAMP".toLowerCase())) {
             return "ON UPDATE CURRENT_TIMESTAMP";
-        } else {
+        } else if (StringUtils.isNotBlank(extra)) {
             System.err.println("暂不支持的extra类型 " + extra);
         }
         return "";
