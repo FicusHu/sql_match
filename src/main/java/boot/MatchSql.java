@@ -121,7 +121,7 @@ public class MatchSql {
         }
 
         //修改字段
-        Set<String> intersection = Tools.intersection(aColumnNames, bColumnNames);
+        List<String> intersection = Tools.intersection(aColumnNames, bColumnNames);
         for (String columnName : intersection) {
             Column bcolumn = bColumnMap.get(columnName);
             if (!bcolumn.compared(aColumnMap.get(columnName), otherSetting.isMatchComment())) {
@@ -166,12 +166,12 @@ public class MatchSql {
         Map<String, List<Index>> bIndexGroup = Tools.getIndexGroupMap(bIndexs);
 
         //删除索引
-        Set<List<Index>> deleteIndex = Tools.removeFrom_A(aIndexGroup.values(), bIndexGroup.values());
+        List<List<Index>> deleteIndex = Tools.removeFrom_A(aIndexGroup.values(), bIndexGroup.values());
         List<ModifySql> dropCollection = SqlCreate.dropIndexSql(deleteIndex);
         sqlComponent.addAll(dropCollection);
 
         //新增索引
-        Set<List<Index>> addIndexs = Tools.addToA(aIndexGroup.values(), bIndexGroup.values());
+        List<List<Index>> addIndexs = Tools.addToA(aIndexGroup.values(), bIndexGroup.values());
         List<ModifySql> addCollect = addIndexs.stream().map(SqlCreate::getAddIndex).collect(Collectors.toList());
         sqlComponent.addAll(addCollect);
 
@@ -210,12 +210,12 @@ public class MatchSql {
         Map<String, TableSchedule> bTableScheduleMap = Tools.getMap(tableScheduleBs, TableSchedule::getTABLE_NAME);
 
 
-        Set<String> removeTest = Tools.removeFrom_A(aTableNames, bTableNames);
+        List<String> removeTest = Tools.removeFrom_A(aTableNames, bTableNames);
         //删除的表
         for (String tableName : removeTest) {
             allModifySql.add(SqlCreate.getDropTable(tableName));
         }
-        Set<String> addTest = Tools.addToA(aTableNames, bTableNames);
+        List<String> addTest = Tools.addToA(aTableNames, bTableNames);
         //新增的表
         for (String tableName : addTest) {
             allModifySql.add(new TableCreate(mySqlB, bTableScheduleMap.get(tableName)).newTableSql() + "\n");

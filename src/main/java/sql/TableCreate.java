@@ -36,7 +36,7 @@ public class TableCreate {
         List<String> createTableComponent = new ArrayList<>();
 
         createTableComponent.addAll(column1s.stream()
-                                            .map(column -> "`" + column.getField() + "` " + column.getType() + " " + sql.SqlCreate.isNullStr(column.getNull()) + " " + sql.SqlCreate.getDefault(column) + " " + sql.SqlCreate.getComment(column.getComment()))
+                                            .map(Column::toTableCreateColumn)
                                             .collect(Collectors.toList()));
 
         createTableComponent.add(getKey(indexs));

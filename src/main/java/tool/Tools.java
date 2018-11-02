@@ -6,7 +6,11 @@ import entity.TableSchedule;
 import sql.SqlSelect;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -45,8 +49,8 @@ public class Tools {
     /**
      * 求出属于A但不属于B的字符串
      */
-    public static <T> Set<T> removeFrom_A(Collection<T> aList, Collection<T> bList) {
-        Set<T> orgAList = new HashSet<>(aList);
+    public static <T> List<T> removeFrom_A(Collection<T> aList, Collection<T> bList) {
+        List<T> orgAList = new ArrayList<>(aList);
         orgAList.removeAll(bList);
         return orgAList;
     }
@@ -54,8 +58,8 @@ public class Tools {
     /**
      * 求出属于B但不属于A的字符串
      */
-    public static <T> Set<T> addToA(Collection<T> aList, Collection<T> bList) {
-        Set<T> orgAList = new HashSet<>(bList);
+    public static <T> List<T> addToA(Collection<T> aList, Collection<T> bList) {
+        List<T> orgAList = new ArrayList<>(bList);
         orgAList.removeAll(aList);
         return orgAList;
     }
@@ -63,10 +67,15 @@ public class Tools {
     /**
      * 交集
      */
-    public static <T> Set<T> intersection(Collection<T> aList, Collection<T> bList) {
-        Set<T> orgAList = new TreeSet<>(aList);
-        orgAList.retainAll(bList);
-        return orgAList;
+    public static <T> List<T> intersection(Collection<T> aList, Collection<T> bList) {
+        ArrayList<T> nAList = new ArrayList<>(aList);
+        ArrayList<T> intersection = new ArrayList<>();
+        for (T b : bList) {
+            if (nAList.remove(b)) {
+                intersection.add(b);
+            }
+        }
+        return intersection;
     }
 
     public static <T, D> Map<D, T> getMap(List<T> list, Function<T, D> keyMap) {

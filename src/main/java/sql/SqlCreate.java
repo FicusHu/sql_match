@@ -7,8 +7,8 @@ import entity.TableSchedule;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author linxixin@cvte.com
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  */
 public class SqlCreate {
 
-    public static List<ModifySql> dropIndexSql(Set<List<Index>> deleteIndex) {
+    public static List<ModifySql> dropIndexSql(List<List<Index>> deleteIndex) {
         return deleteIndex.stream().map(indices -> new ModifySql("DROP INDEX `" + indices.get(0).getKey_name() + "`")).collect(Collectors.toList());
 
     }
@@ -68,14 +68,15 @@ public class SqlCreate {
 
 
         // 类似 MODIFY COLUMN `tsttt2`  varchar(255) NULL DEFAULT '0' COMMENT '测试属性' AFTER `tettt`
-        String template = "COLUMN `%s` %s %s %s %s %s";
-        return String.format(template
-                , columnName
+        return "COLUMN " + Stream.of(
+                columnName
                 , column.getType()
                 , isNullStr(column.getNull())
+                , SqlCreate.getExtra(column.getExtra())
                 , getDefault(column)
                 , getComment(column.getComment())
-                , position);
+                , position).filter(StringUtils::isNotEmpty)
+                .collect(Collectors.joining(" "));
     }
 
 
@@ -84,14 +85,14 @@ public class SqlCreate {
         for (int i = 0; i < addOrDropSqlComponents.size() - 1; i++) {
             ModifySql modifySql = addOrDropSqlComponents.get(i);
             if (tipsShow) {
-                sql += modifySql.getSql() + ", " + StringUtils.defaultIfEmpty(modifySql.getTip(), "") + "\n";
+                sql += modifySql.getSql() + ", " + getTips(modifySql.getTip()) + "\n";
             } else {
                 sql += modifySql.getSql() + ", " + "\n";
             }
         }
 
         ModifySql lastModifySql = addOrDropSqlComponents.get(addOrDropSqlComponents.size() - 1);
-        sql += lastModifySql.getSql() + "; " + lastModifySql.getTip();
+        sql += lastModifySql.getSql() + ";" + getTips(lastModifySql.getTip());
         return sql;
     }
 
@@ -135,6 +136,25 @@ public class SqlCreate {
                 return "DEFAULT '1970-01-01 00:00'";
             }
             return "";
+        }
+    }
+
+    public static String getExtra(String extra) {
+        if (extra.toLowerCase().equals("auto_increment")) {
+            return "AUTO_INCREMENT";
+        } else if (extra.toLowerCase().equals("on update CURRENT_TIMESTAMP".toLowerCase())) {
+            return "ON UPDATE CURRENT_TIMESTAMP";
+        } else {
+            System.err.println("暂不支持的extra类型 " + extra);
+        }
+        return "";
+    }
+
+    public static String getTips(String tip) {
+        if (StringUtils.isBlank(tip)) {
+            return "";
+        } else {
+            return "# " + tip;
         }
     }
 
