@@ -73,7 +73,6 @@ public class SqlCreate {
                 , column.getType()
                 , isNullStr(column.getNull())
                 , SqlCreate.getExtra(column.getExtra())
-                , SqlCreate.getExtra(column.getExtra())
                 , getDefault(column)
                 , getComment(column.getComment())
                 , position).filter(StringUtils::isNotEmpty)
