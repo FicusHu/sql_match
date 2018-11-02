@@ -92,7 +92,11 @@ public class SqlCreate {
         }
 
         ModifySql lastModifySql = addOrDropSqlComponents.get(addOrDropSqlComponents.size() - 1);
-        sql += lastModifySql.getSql() + ";" + getTips(lastModifySql.getTip());
+        if (tipsShow) {
+            sql += lastModifySql.getSql() + ";" + getTips(lastModifySql.getTip());
+        } else {
+            sql += lastModifySql.getSql() + ";";
+        }
         return sql;
     }
 
@@ -164,7 +168,7 @@ public class SqlCreate {
         if (StringUtils.isBlank(tip)) {
             return "";
         } else {
-            return "# " + tip;
+            return " # " + tip;
         }
     }
 
