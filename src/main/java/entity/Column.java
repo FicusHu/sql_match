@@ -70,7 +70,8 @@ public class Column {
 
         if (Field != null ? !Field.equals(column.Field) : column.Field != null) return false;
         if (isCommentCompared) {
-            if (Comment != null ? !Comment.equals(column.Comment) : column.Comment != null) return false;
+            if (Comment != null ? !Comment.replace("\r\n", "\n").equals(column.Comment.replace("\r\n", "\n")) : column.Comment != null)
+                return false;
         }
         if (Type != null ? !Type.equals(column.Type) : column.Type != null) return false;
         if (!"datetime".equals(Type)) {
